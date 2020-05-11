@@ -15,7 +15,7 @@ pub mod question;
 pub mod round_data;
 
 pub async fn run_server(questions: Vec<Question>) {
-    let listener = TcpListener::bind("127.0.0.1:8001")
+    let listener = TcpListener::bind("0.0.0.0:8001")
         .await
         .expect("Could not open socket");
 
