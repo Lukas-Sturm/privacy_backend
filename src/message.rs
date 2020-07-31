@@ -11,7 +11,14 @@ pub enum FromPlayerMessage {
 
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize, Debug)]
 pub enum ToPlayerMessage {
-    PlayerList { players: Vec<String> },
-    RoundData { data: RoundData },
-    PoseQuestion { question: String },
+    PlayerList {
+        players: Vec<String>,
+        has_answered: Vec<String>,
+    },
+    RoundData {
+        data: RoundData,
+    },
+    PoseQuestion {
+        question: String,
+    },
 }

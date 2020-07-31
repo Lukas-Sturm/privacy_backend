@@ -49,7 +49,7 @@ impl GameRoom {
         room.shuffle();
 
         info!(
-            "GameRoom started, current question is {}",
+            "GameRoom started, current question is \"{}\"",
             room.get_question().text.as_str()
         );
 
@@ -112,6 +112,11 @@ impl GameRoom {
             FromPlayerMessage::Answer { yes } => {
                 if let Some(state) = self.players.get_mut(&player) {
                     state.answer = Some(yes);
+
+                    if state.answer.is_some() && state.guess.is_some() {
+                        // We must tell the others about that, the player is ready
+                        self.broadcast_players();
+                    }
                 }
             }
 
@@ -119,6 +124,11 @@ impl GameRoom {
             FromPlayerMessage::Guess { number } => {
                 if let Some(state) = self.players.get_mut(&player) {
                     state.guess = Some(number);
+
+                    if state.answer.is_some() && state.guess.is_some() {
+                        // We must tell the others about that, the player is ready
+                        self.broadcast_players();
+                    }
                 }
             }
         }
@@ -165,6 +175,7 @@ impl GameRoom {
         self.broadcast(ToPlayerMessage::PoseQuestion {
             question: self.get_question().text.clone(),
         });
+        self.broadcast_players();
     }
 
     fn next_question(&mut self) {
@@ -207,7 +218,23 @@ impl GameRoom {
     /// Broadcast the list of players
     fn broadcast_players(&mut self) {
         let players = self.players.iter().map(|(k, _)| k.clone()).collect();
-        self.broadcast(ToPlayerMessage::PlayerList { players })
+
+        let has_answered = self
+            .players
+            .iter()
+            .filter_map(|(k, v)| {
+                if v.guess.is_some() && v.answer.is_some() {
+                    Some(k.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        self.broadcast(ToPlayerMessage::PlayerList {
+            players,
+            has_answered,
+        })
     }
 
     /// Broadcast a message to all players
